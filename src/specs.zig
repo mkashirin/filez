@@ -82,7 +82,7 @@ pub const SocketBuffer = struct {
         stream_writer: StreamWriter,
     ) !usize {
         var bytes_written: usize = 0;
-        inline for (std.meta.fields(@TypeOf(self.*))) |field| {
+        inline for (std.meta.fields(@This())) |field| {
             const value = &@field(self, field.name);
             bytes_written += try stream_writer.write(value.*);
             try stream_writer.writeByte('\n');
@@ -91,10 +91,8 @@ pub const SocketBuffer = struct {
         return bytes_written;
     }
 
-    pub fn deinit(self: *SocketBuffer, allocator: Allocator) void {
-        inline for (std.meta.fields(@TypeOf(self.*))) |field| {
-            allocator.free(@field(self, field.name));
-        }
+    pub fn deinit(self: *SocketBuffer) void {
+        self.* = undefined;
     }
 
     fn readFileContents(

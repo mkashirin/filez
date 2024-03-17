@@ -27,7 +27,7 @@ pub fn recieve(allocator: Allocator, action_config: ActionConfig) !void {
         allocator,
         stream_reader,
     );
-    defer socket_buffer.deinit(allocator);
+    defer socket_buffer.deinit();
 
     // The following statement insures that passwords for server and client
     // sides are equal.

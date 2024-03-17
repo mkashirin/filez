@@ -17,7 +17,7 @@ pub fn dispatch(allocator: Allocator, action_config: ActionConfig) !usize {
         allocator,
         action_config,
     );
-    defer socket_buffer.deinit(allocator);
+    defer socket_buffer.deinit();
 
     const bytes_written = try socket_buffer.writeIntoStream(stream_writer);
     return bytes_written;
