@@ -5,7 +5,7 @@ const Allocator = std.mem.Allocator;
 const clap = @import("clap");
 
 const specs = @import("specs.zig");
-const receive = @import("receiver.zig").recieve;
+const receive = @import("receiver.zig").receive;
 const dispatch = @import("dispatcher.zig").dispatch;
 
 pub fn main() !void {
