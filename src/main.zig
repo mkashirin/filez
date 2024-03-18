@@ -16,7 +16,7 @@ pub fn main() !void {
     try run(allocator);
 }
 
-pub fn run(allocator: Allocator) !void {
+fn run(allocator: Allocator) !void {
     // Clap parses all the arguments and their types from this comptime string.
     const params = comptime clap.parseParamsComptime(
         \\-h, --help             Display this message and exit.
