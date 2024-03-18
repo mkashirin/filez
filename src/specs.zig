@@ -118,8 +118,10 @@ pub const SocketBuffer = struct {
 
     /// Deinitializes the existing `SocketBuffer` discarding all the memory
     /// that was allocated for it to prevent memory leaks.
-    pub fn deinit(self: *SocketBuffer) void {
-        self.* = undefined;
+    pub fn deinit(self: *SocketBuffer, allocator: Allocator) void {
+        inline for (std.meta.fields(@This())) |field| {
+            allocator.free(@field(self, field.name));
+        }
     }
 
     /// Utility function to read the contents of the file specified.

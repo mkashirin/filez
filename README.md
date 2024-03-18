@@ -35,19 +35,17 @@ the tool on your local machine only (make sure to make Filez visible to your
 system first).
 
 Open a terminal and execute the following command, specifying your own path to 
-the directory where you want to store the received file. The format should be 
-`absolute/path/to/directory/`:
+the directory where you want to store the received file:
 
 ```
-filez --action=recieve --path=<PATH> --host=127.0.0.1 --port=8080 --password=123
+filez --action=recieve --path=absolute/path/to/directory -H=127.0.0.1 -P=8080 -p=pass123
 ```
 
 Then, open a second terminal instance and execute the following command, 
-specifying the path to the file that you wish to process 
-(the format is `absolute/path/to/file.extension`):
+specifying the path to the file that you wish to process:
 
 ```
-filez --action=dispatch --path=<PATH> --host=127.0.0.1 --port-8080 --password=123
+filez --action=dispatch --path=absolute/path/to/file.ext -H=127.0.0.1 -P=8080 -p=pass123
 ```
 
 **Remember**, the file size must not exceed the maximum of 8 kilobytes.

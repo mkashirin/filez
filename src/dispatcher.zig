@@ -21,7 +21,7 @@ pub fn dispatch(allocator: Allocator, action_config: ActionConfig) !usize {
         allocator,
         action_config,
     );
-    defer socket_buffer.deinit();
+    defer socket_buffer.deinit(allocator);
 
     // Write the data into the socket and store the number of bytes written.
     const bytes_written = try socket_buffer.writeIntoStream(stream_writer);
