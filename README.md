@@ -54,8 +54,8 @@ filez \
     --action=dispatch \
     --path=absolute/path/to/file.ext \
     --host=127.0.0.1 \
-    -port=8080 \
-    -password=pass123
+    --port=8080 \
+    --password=pass123
 ```
 
 **Remember**, the file size must not exceed the maximum of 8 kilobytes.
