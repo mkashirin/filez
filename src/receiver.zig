@@ -9,6 +9,8 @@ const SocketBuffer = specs.SocketBuffer;
 
 const RecieveError = error{PasswordMismatch};
 
+/// Receives the incoming connection and saves the addressed file into the
+/// directory specified in the `ActionConfig`.
 pub fn recieve(allocator: Allocator, action_config: ActionConfig) !void {
     // The `StreamServer` needs to be initialized at first to accept any
     // incoming connection.
