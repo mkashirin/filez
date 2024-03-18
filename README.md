@@ -13,14 +13,14 @@ from source. Here are the steps to do so.
 Clone this repository onto your local machine using the Git Command Line 
 Interface (CLI):
 
-```
+```bash
 git clone https://github.com/mkashirin/filez
 ```
 
 Compile a binary using the Zig compiler (the sole valid version of Zig 
 is 0.11.0) by running the following command:
 
-```
+```bash
 zig build
 ```
 
@@ -37,15 +37,25 @@ system first).
 Open a terminal and execute the following command, specifying your own path to 
 the directory where you want to store the received file:
 
-```
-filez --action=recieve --path=absolute/path/to/directory -H=127.0.0.1 -P=8080 -p=pass123
+```bash
+filez \
+    --action=recieve \
+    --path=absolute/path/to/directory \
+    --host=127.0.0.1 \
+    --port=8080 \
+    --password=pass123
 ```
 
 Then, open a second terminal instance and execute the following command, 
 specifying the path to the file that you wish to process:
 
-```
-filez --action=dispatch --path=absolute/path/to/file.ext -H=127.0.0.1 -P=8080 -p=pass123
+```bash
+filez \
+    --action=dispatch \
+    --path=absolute/path/to/file.ext \
+    --host=127.0.0.1 \
+    -port=8080 \
+    -password=pass123
 ```
 
 **Remember**, the file size must not exceed the maximum of 8 kilobytes.
