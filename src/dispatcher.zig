@@ -1,6 +1,4 @@
 const std = @import("std");
-const net = std.net;
-const Address = net.Address;
 const Allocator = std.mem.Allocator;
 
 const specs = @import("specs.zig");
@@ -10,9 +8,12 @@ const SocketBuffer = specs.SocketBuffer;
 /// Dispatches the file to the host with port specified in the `ActionConfig`
 /// passed.
 pub fn dispatch(allocator: Allocator, action_config: ActionConfig) !usize {
-    const address = try Address.parseIp(action_config.host, action_config.port);
+    const address = try std.net.Address.parseIp(
+        action_config.host,
+        action_config.port,
+    );
     // Connect to the receiver via TCP.
-    const stream = try net.tcpConnectToAddress(address);
+    const stream = try std.net.tcpConnectToAddress(address);
     defer stream.close();
 
     const stream_writer = stream.writer();

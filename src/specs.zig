@@ -1,7 +1,7 @@
 const std = @import("std");
+const Allocator = std.mem.Allocator;
 const StreamReader = std.net.Stream.Reader;
 const StreamWriter = std.net.Stream.Writer;
-const Allocator = std.mem.Allocator;
 
 pub const ActionConfig = struct {
     /// This struct provides the action configuration which should be passed to

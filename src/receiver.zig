@@ -1,6 +1,4 @@
 const std = @import("std");
-const net = std.net;
-const Address = net.Address;
 const Allocator = std.mem.Allocator;
 
 const specs = @import("specs.zig");
@@ -14,10 +12,13 @@ const RecieveError = error{PasswordMismatch};
 pub fn recieve(allocator: Allocator, action_config: ActionConfig) !void {
     // The `StreamServer` needs to be initialized at first to accept any
     // incoming connection.
-    var server = net.StreamServer.init(.{ .reuse_port = true });
+    var server = std.net.StreamServer.init(.{ .reuse_port = true });
     defer server.deinit();
 
-    const address = try Address.parseIp(action_config.host, action_config.port);
+    const address = try std.net.Address.parseIp(
+        action_config.host,
+        action_config.port,
+    );
     try server.listen(address);
     var client = try server.accept();
     defer client.stream.close();
