@@ -30,12 +30,11 @@ pub const SocketBuffer = struct {
         allocator: Allocator,
         action_config: ActionConfig,
     ) !SocketBuffer {
-        const new = SocketBuffer{
+        return .{
             .password = try allocator.dupe(u8, action_config.password),
             .path = try allocator.dupe(u8, action_config.path),
             .contents = try readFileContents(allocator, action_config.path),
         };
-        return new;
     }
 
     /// Initializes a new `SocketBuffer` based on the data coming from the
@@ -44,7 +43,7 @@ pub const SocketBuffer = struct {
         allocator: Allocator,
         stream_reader: StreamReader,
     ) !SocketBuffer {
-        var new = SocketBuffer{};
+        var new: SocketBuffer = .{};
         // This loop has to be inline to make use of a comptime known
         // `SocketBuffer` field names.
         inline for (std.meta.fields(@This())) |field| {
