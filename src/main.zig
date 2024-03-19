@@ -5,7 +5,7 @@ const Allocator = std.mem.Allocator;
 const clap = @import("clap");
 
 const specs = @import("specs.zig");
-const receive = @import("receiver.zig").recieve;
+const receive = @import("receiver.zig").receive;
 const dispatch = @import("dispatcher.zig").dispatch;
 
 pub fn main() !void {
@@ -16,7 +16,7 @@ pub fn main() !void {
     try run(allocator);
 }
 
-pub fn run(allocator: Allocator) !void {
+fn run(allocator: Allocator) !void {
     // Clap parses all the arguments and their types from this comptime string.
     const params = comptime clap.parseParamsComptime(
         \\-h, --help             Display this message and exit.
