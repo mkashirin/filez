@@ -25,7 +25,8 @@ zig build
 ```
 
 After completing the above steps, the binary will be located in the 
-"zig-out/bin/" directory. That concludes the process.
+"zig-out/bin/" directory. That concludes the process. Consider different 
+`zig build` modes for embedded systems.
 
 ## Usage
 
@@ -62,4 +63,4 @@ filez \
 
 ## Note
 
-Consider different `zig build` modes for embedded systems.
+Devises to be communicating with files must have ability to ping each other.
