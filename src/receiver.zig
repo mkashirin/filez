@@ -36,7 +36,7 @@ pub fn receive(allocator: Allocator, action_config: ActionConfig) !void {
     // sides are equal.
     const buffer_password: []const u8 = socket_buffer.password;
     if (!std.mem.eql(u8, action_config.password, buffer_password))
-        return RecieveError.PasswordMismatch;
+        return ReceiveError.PasswordMismatch;
 
     // Finally, the received data gets written into the file placed in the
     // specified directory.

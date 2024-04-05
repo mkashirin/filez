@@ -12,14 +12,12 @@ from source. Here are the steps to do so.
 
 Clone this repository onto your local machine using the Git Command Line 
 Interface (CLI):
-
 ```bash
 git clone https://github.com/mkashirin/filez
 ```
 
 Compile a binary using the Zig compiler (the sole valid version of Zig 
 is 0.11.0) by running the following command:
-
 ```bash
 zig build
 ```
@@ -40,8 +38,8 @@ the directory where you want to store the received file:
 
 ```bash
 filez \
-    --action=recieve \
-    --path=absolute/path/to/directory \
+    --action=receive \
+    --path=absolute/path/to/directory/ \
     --host=127.0.0.1 \
     --port=8080 \
     --password=pass123
