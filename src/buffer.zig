@@ -43,10 +43,11 @@ pub const SocketBuffer = struct {
         allocator: Allocator,
         stream_reader: StreamReader,
     ) !SocketBuffer {
-        var new: SocketBuffer = .{};
         // This loop has to be inline to make use of a comptime known
         // `SocketBuffer` field names.
-        inline for (std.meta.fields(@This())) |field| {
+        var new = SocketBuffer{};
+        const fields = std.meta.fields(@This());
+        inline for (fields) |field| {
             // This `list` serves as a buffer, since the object with writer is
             // required to be passed as an argument to the
             // `net.Stream.Reader.streamUntilDelimiter()` function.
@@ -106,7 +107,8 @@ pub const SocketBuffer = struct {
     ) !usize {
         // Store the size of the data being written in bytes.
         var bytes_written: usize = 0;
-        inline for (std.meta.fields(@This())) |field| {
+        const fields = std.meta.fields(@This());
+        inline for (fields) |field| {
             const value = &@field(self, field.name);
             bytes_written += try stream_writer.write(value.*);
             try stream_writer.writeByte('\n');
@@ -118,14 +120,15 @@ pub const SocketBuffer = struct {
     /// Deinitializes the existing `SocketBuffer` discarding all the memory
     /// that was allocated for it to prevent memory leaks.
     pub fn deinit(self: *SocketBuffer, allocator: Allocator) void {
-        inline for (std.meta.fields(@This())) |field| {
+        const fields = std.meta.fields(@This());
+        inline for (fields) |field| {
             allocator.free(@field(self, field.name));
         }
     }
 
     /// Utility function to read the contents of the file specified.
     fn readFileContents(
-        allocator: Allocator,
+        allocator: std.mem.Allocator,
         file_absolute_path: []const u8,
     ) ![]u8 {
         const file = try std.fs.openFileAbsolute(file_absolute_path, .{});

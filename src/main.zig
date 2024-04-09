@@ -1,12 +1,12 @@
 const std = @import("std");
 const io = std.io;
-const Allocator = std.mem.Allocator;
 
 const clap = @import("clap");
 
-const specs = @import("specs.zig");
+const buffer = @import("buffer.zig");
 const receive = @import("receiver.zig").receive;
 const dispatch = @import("dispatcher.zig").dispatch;
+const settings = @import("settings.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -16,44 +16,32 @@ pub fn main() !void {
     try run(allocator);
 }
 
-fn run(allocator: Allocator) !void {
-    // Clap parses all the arguments and their types from this comptime string.
-    const params = comptime clap.parseParamsComptime(
-        \\-h, --help             Display this message and exit.
-        \\    --action <ACTION>  Receive or dispatch file.
-        \\    --path <PATH>      Absolute path to the file to dispatch or 
-        \\                       directory, where to put the received file.
-        \\-H, --host <HOST>      Host to be listened on/connected to.
-        \\-P, --port <PORT>      Port to be listened on/connected to.
-        \\-p, --password <PASS>  Passwords set for receiver and dispatcher must 
-        \\                       match. Otherwise an error would be returned.
-        \\
-    );
-    // Then the custom parsers need to be defined since special types are
-    // dealcared for the arguments.
-    const parsers = comptime .{
-        .ACTION = clap.parsers.enumeration(specs.ActionConfig.Action),
-        .PATH = clap.parsers.string,
-        .HOST = clap.parsers.string,
-        .PORT = clap.parsers.int(u16, 10),
-        .PASS = clap.parsers.string,
-    };
-
-    var res = try clap.parse(clap.Help, &params, parsers, .{
+fn run(allocator: std.mem.Allocator) !void {
+    var res = try clap.parse(clap.Help, &settings.params, settings.parsers, .{
         .allocator = allocator,
     });
     defer res.deinit();
 
     // The following logic handles the user input.
-    if (res.args.help != 0)
-        return clap.help(io.getStdErr().writer(), clap.Help, &params, .{});
+    const stdout = io.getStdOut().writer();
+    if (res.args.help != 0) {
+        try stdout.print("{s}\n", .{settings.help_message});
+        return clap.help(
+            stdout,
+            clap.Help,
+            &settings.params,
+            settings.help_options,
+        );
+    }
+
     if (res.args.action) |action| {
-        const action_config = specs.ActionConfig{
-            .host = res.args.host.?,
-            .port = res.args.port.?,
-            .path = res.args.path.?,
-            .password = res.args.password.?,
+        const action_config = buffer.ActionConfig{
+            .host = res.args.host orelse @panic("Missing host!"),
+            .port = res.args.port orelse @panic("Missing port!"),
+            .password = res.args.password orelse @panic("Missing password!"),
+            .path = res.args.path orelse @panic("Missing path!"),
         };
+
         switch (action) {
             .receive => try receive(allocator, action_config),
             // `dispatch()` returns the number of bytes written.

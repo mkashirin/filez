@@ -1,9 +1,9 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-const specs = @import("specs.zig");
-const ActionConfig = specs.ActionConfig;
-const SocketBuffer = specs.SocketBuffer;
+const buffer = @import("buffer.zig");
+const ActionConfig = buffer.ActionConfig;
+const SocketBuffer = buffer.SocketBuffer;
 
 const ReceiveError = error{PasswordMismatch};
 
