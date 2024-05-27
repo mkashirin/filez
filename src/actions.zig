@@ -21,7 +21,7 @@ pub fn dispatch(
         options_variable.host,
         try options_variable.parsePort(),
     );
-    try stdout.print("Filez: Listening on the {}...", .{address});
+    try stdout.print("Filez: Listening on the {}...\n", .{address});
     var server = try address.listen(.{ .reuse_port = true });
     // Accept incoming connection and acquire the stream.
     const connection = try server.accept();
