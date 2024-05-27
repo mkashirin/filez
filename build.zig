@@ -11,10 +11,6 @@ pub fn build(b: *Build) void {
         .target = target,
         .optimize = optimize,
     });
-    const clap = b.createModule(.{
-        .source_file = .{ .path = "libs/zig-clap-0.7.0/clap.zig" },
-    });
-    exe.addModule("clap", clap);
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);

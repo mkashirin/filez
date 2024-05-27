@@ -1,51 +1,62 @@
 const std = @import("std");
+const process = std.process;
 const io = std.io;
+const Allocator = std.mem.Allocator;
 
-const clap = @import("clap");
-
-const buffer = @import("buffer.zig");
-const receive = @import("receiver.zig").receive;
-const dispatch = @import("dispatcher.zig").dispatch;
-const settings = @import("settings.zig");
+const socket = @import("socket.zig");
+const actions = @import("actions.zig");
+const messages = @import("messages.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    try run(allocator);
+    const stdout = io.getStdOut().writer();
+
+    try run(allocator, stdout);
 }
 
-fn run(allocator: std.mem.Allocator) !void {
-    var res = try clap.parse(clap.Help, &settings.params, settings.parsers, .{
-        .allocator = allocator,
-    });
-    defer res.deinit();
+/// This function, in fact, runs the application. It processes the command
+/// line arguments into the `socket.ActionOptions` struct which then gets
+/// fed to the `actions.receive()` or `actions.dispatch()`.
+fn run(allocator: Allocator, stdout: anytype) !void {
+    var args = try process.argsWithAllocator(allocator);
+    defer args.deinit();
 
-    // The following logic handles the user input.
-    const stdout = io.getStdOut().writer();
-    if (res.args.help != 0) {
-        try stdout.print("{s}\n", .{settings.help_message});
-        return clap.help(
-            stdout,
-            clap.Help,
-            &settings.params,
-            settings.help_options,
-        );
+    // This hash map will serve as a temporary storage for the argumnets.
+    var args_map = std.StringHashMap([]const u8).init(allocator);
+    defer args_map.deinit();
+    var help_flag = false;
+
+    var args_count: usize = 1;
+    while (args.next()) |arg| : (args_count += 1) {
+        if (std.mem.eql(u8, arg, "help")) {
+            // Display the help message if command is "help".
+            help_flag = true;
+            return try stdout.print("{s}\n", .{messages.help_message});
+        } else if (args_count > 1 and args_count <= 6) {
+            // Otherwise continue iterating until arguments count does not
+            // exceed 6.
+            var arg_iter = std.mem.splitScalar(u8, arg, '=');
+            // Exclude "--" at the start of an argument name.
+            const name = arg_iter.next().?[2..];
+            const value = arg_iter.next().?;
+
+            try args_map.put(name, value);
+        }
+    }
+    // Tell the user if the input is incorrect.
+    if ((args_count - 1 != 6 and help_flag != true) or args_count < 2) {
+        return try stdout.print("{s}\n", .{messages.incorr_input_res});
     }
 
-    if (res.args.action) |action| {
-        const action_config = buffer.ActionConfig{
-            .host = res.args.host orelse @panic("Missing host!"),
-            .port = res.args.port orelse @panic("Missing port!"),
-            .password = res.args.password orelse @panic("Missing password!"),
-            .path = res.args.path orelse @panic("Missing path!"),
-        };
+    var options = try socket.ActionOptions.init(allocator, args_map);
+    defer options.deinit(allocator);
+    const action = options.parseAction();
 
-        switch (action) {
-            .receive => try receive(allocator, action_config),
-            // `dispatch()` returns the number of bytes written.
-            .dispatch => _ = try dispatch(allocator, action_config),
-        }
+    switch (action) {
+        .dispatch => try actions.dispatch(allocator, options, stdout),
+        .receive => try actions.receive(allocator, options, stdout),
     }
 }
