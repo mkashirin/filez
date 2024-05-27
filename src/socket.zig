@@ -16,11 +16,11 @@ pub const ActionOptions = struct {
         }
     };
 
-    action: []const u8 = "<action>",
-    fdpath: []const u8 = "<string>",
-    host: []const u8 = "<string>",
-    port: []const u8 = "<u16>",
-    password: []const u8 = "<string>",
+    action: []const u8 = undefined,
+    fdpath: []const u8 = undefined,
+    host: []const u8 = undefined,
+    port: []const u8 = undefined,
+    password: []const u8 = undefined,
 
     /// Initilizes action options struct using a hash map of CLI arguments.
     pub fn init(
