@@ -3,23 +3,26 @@ const net = std.net;
 const Allocator = std.mem.Allocator;
 
 pub const ActionOptions = struct {
-    /// This struct provides the action configuration which should be passed to
-    /// the `SocketBuffer`, `receive()` and `dispatch()` functions.
+    /// This struct stores command line arguments and provides the action
+    /// options which should be passed to the `SocketBuffer`, `receive()` and
+    /// `dispatch()` functions.
     pub const Action = enum {
         dispatch,
         receive,
 
+        /// Acquires action from string.
         pub fn fromString(str: []const u8) ?Action {
             return std.meta.stringToEnum(Action, str);
         }
     };
 
-    action: []const u8 = undefined,
-    fdpath: []const u8 = undefined,
-    host: []const u8 = undefined,
-    port: []const u8 = undefined,
-    password: []const u8 = undefined,
+    action: []const u8 = "<action>",
+    fdpath: []const u8 = "<string>",
+    host: []const u8 = "<string>",
+    port: []const u8 = "<u16>",
+    password: []const u8 = "<string>",
 
+    /// Initilizes action options struct using a hash map of CLI arguments.
     pub fn init(
         allocator: Allocator,
         args_map: std.StringHashMap([]const u8),
@@ -33,14 +36,17 @@ pub const ActionOptions = struct {
         return new;
     }
 
+    /// Returns an enum based on the active action field.
     pub fn parseAction(self: *ActionOptions) Action {
         return std.meta.stringToEnum(Action, self.action).?;
     }
 
+    /// Returns a `u16` integer to passed as a port to the further functions.
     pub fn parsePort(self: *ActionOptions) !u16 {
         return try std.fmt.parseInt(u16, self.port, 10);
     }
 
+    /// Frees all the memory been allocated to store the options.
     pub fn deinit(self: *ActionOptions, allocator: Allocator) void {
         const fields = std.meta.fields(@This());
         inline for (fields) |field| {
