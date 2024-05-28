@@ -6,48 +6,48 @@ pub const ActionOptions = struct {
     /// This struct stores command line arguments and provides the action
     /// options which should be passed to the `SocketBuffer`, `receive()` and
     /// `dispatch()` functions.
-    pub const Action = enum {
-        dispatch,
-        receive,
+    pub const Action = enum { dispatch, receive };
+    const Self = @This();
 
-        /// Acquires action from string.
-        pub fn fromString(str: []const u8) ?Action {
-            return std.meta.stringToEnum(Action, str);
-        }
-    };
-
-    action: []const u8 = undefined,
-    fdpath: []const u8 = undefined,
-    host: []const u8 = undefined,
-    port: []const u8 = undefined,
-    password: []const u8 = undefined,
+    action: []const u8,
+    fdpath: []const u8,
+    host: []const u8,
+    port: []const u8,
+    password: []const u8,
 
     /// Initilizes action options struct using a hash map of CLI arguments.
     pub fn init(
         allocator: Allocator,
         args_map: std.StringHashMap([]const u8),
-    ) !ActionOptions {
-        var new = ActionOptions{};
+    ) !Self {
+        const U = undefined;
+        var new: Self = .{
+            .action = U,
+            .fdpath = U,
+            .host = U,
+            .port = U,
+            .password = U,
+        };
         const fields = std.meta.fields(@This());
         inline for (fields) |field| {
-            const arg_value = args_map.get(field.name).?;
+            const arg_value = args_map.get(field.name);
             @field(new, field.name) = try allocator.dupe(u8, arg_value);
         }
         return new;
     }
 
     /// Returns an enum based on the active action field.
-    pub fn parseAction(self: *ActionOptions) Action {
+    pub fn parseAction(self: *Self) Action {
         return std.meta.stringToEnum(Action, self.action).?;
     }
 
     /// Returns a `u16` integer to passed as a port to the further functions.
-    pub fn parsePort(self: *ActionOptions) !u16 {
+    pub fn parsePort(self: *Self) !u16 {
         return try std.fmt.parseInt(u16, self.port, 10);
     }
 
     /// Frees all the memory been allocated to store the options.
-    pub fn deinit(self: *ActionOptions, allocator: Allocator) void {
+    pub fn deinit(self: *Self, allocator: Allocator) void {
         const fields = std.meta.fields(@This());
         inline for (fields) |field| {
             allocator.free(@field(self, field.name));
@@ -63,18 +63,19 @@ pub const SocketBuffer = struct {
     /// functionality to a separate socket management structure. Therefore, the
     /// `SocketBuffer`, which serves as an interface for manipulating socket
     /// data, is introduced.
-    fdpath: []u8 = undefined,
-    password: []u8 = undefined,
-    contents: []u8 = undefined,
+    fdpath: []u8,
+    password: []u8,
+    contents: []u8,
+    const Self = @This();
 
     /// Initializes a new `SocketBuffer` based on the `ActionConfig` data.
     pub fn initFromOptions(
         allocator: Allocator,
         options: ActionOptions,
-    ) !SocketBuffer {
+    ) !Self {
         return .{
-            .password = try allocator.dupe(u8, options.password),
             .fdpath = try allocator.dupe(u8, options.fdpath),
+            .password = try allocator.dupe(u8, options.password),
             .contents = try readFileContents(allocator, options.fdpath),
         };
     }
@@ -84,10 +85,11 @@ pub const SocketBuffer = struct {
     pub fn initFromStream(
         allocator: Allocator,
         stream_reader: net.Stream.Reader,
-    ) !SocketBuffer {
+    ) !Self {
         // This loop has to be inline to make use of a comptime known
         // `SocketBuffer` field names.
-        var new = SocketBuffer{};
+        const U = undefined;
+        var new: Self = .{ .fdpath = U, .password = U, .contents = U };
         const fields = std.meta.fields(@This());
         inline for (fields) |field| {
             // This `list` serves as a buffer, since the object with writer is
@@ -119,15 +121,15 @@ pub const SocketBuffer = struct {
 
     /// Writes the conetents stored in the `self` into the file.
     pub fn writeContentsIntoFile(
-        self: *SocketBuffer,
+        self: *Self,
         dir_absolute_path: []const u8,
         contents: *[]u8,
     ) !void {
-        var directory = try std.fs.openDirAbsolute(
+        var dir = try std.fs.openDirAbsolute(
             dir_absolute_path,
             .{ .no_follow = true },
         );
-        defer directory.close();
+        defer dir.close();
 
         var file_path_iterator = std.mem.splitBackwardsScalar(
             u8,
@@ -136,7 +138,7 @@ pub const SocketBuffer = struct {
         );
         // Acquire the name of the file received.
         const file_name = file_path_iterator.first();
-        var file = try directory.createFile(file_name, .{ .read = true });
+        var file = try dir.createFile(file_name, .{ .read = true });
         defer file.close();
         // Write into file.
         try file.seekTo(0);
@@ -145,7 +147,7 @@ pub const SocketBuffer = struct {
 
     /// Writes the data stored in `self` into the connection stream.
     pub fn writeIntoStream(
-        self: *SocketBuffer,
+        self: *Self,
         stream_writer: net.Stream.Writer,
     ) !usize {
         // Store the size of the data being written in bytes.
@@ -162,7 +164,7 @@ pub const SocketBuffer = struct {
 
     /// Deinitializes the existing `SocketBuffer` discarding all the memory
     /// that was allocated for it to prevent memory leaks.
-    pub fn deinit(self: *SocketBuffer, allocator: Allocator) void {
+    pub fn deinit(self: *Self, allocator: Allocator) void {
         const fields = std.meta.fields(@This());
         inline for (fields) |field| {
             allocator.free(@field(self, field.name));
