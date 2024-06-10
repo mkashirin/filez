@@ -16,7 +16,7 @@ pub const ActionOptions = struct {
     password: []const u8,
 
     /// Initilizes action options struct using a hash map of CLI arguments.
-    pub fn init(
+    pub fn initFromArgs(
         allocator: Allocator,
         args_map: std.StringHashMap([]const u8),
     ) !Self {
@@ -31,7 +31,7 @@ pub const ActionOptions = struct {
         const fields = std.meta.fields(@This());
         inline for (fields) |field| {
             const arg_value = args_map.get(field.name);
-            @field(new, field.name) = try allocator.dupe(u8, arg_value);
+            @field(new, field.name) = try allocator.dupe(u8, arg_value.?);
         }
         return new;
     }

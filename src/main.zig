@@ -51,7 +51,7 @@ fn run(allocator: Allocator, stdout: anytype) !void {
         return try stdout.print("{s}\n", .{messages.incorr_input_res});
     }
 
-    var options = try socket.ActionOptions.init(allocator, args_map);
+    var options = try socket.ActionOptions.initFromArgs(allocator, args_map);
     defer options.deinit(allocator);
     const action = options.parseAction();
 
