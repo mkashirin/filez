@@ -1,6 +1,8 @@
 const std = @import("std");
+const heap = std.heap;
 const process = std.process;
 const io = std.io;
+
 const Allocator = std.mem.Allocator;
 
 const socket = @import("socket.zig");
@@ -8,9 +10,9 @@ const actions = @import("actions.zig");
 const messages = @import("messages.zig");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer _ = gpa.deinit();
+    var arena = std.heap.ArenaAllocator.init(heap.page_allocator);
+    const allocator = arena.allocator();
+    defer arena.deinit();
 
     const stdout = io.getStdOut().writer();
 
@@ -20,12 +22,12 @@ pub fn main() !void {
 /// This function, in fact, runs the application. It processes the command
 /// line arguments into the `socket.ActionOptions` struct which then gets
 /// fed to the `actions.receive()` or `actions.dispatch()`.
-fn run(allocator: Allocator, stdout: anytype) !void {
-    var args = try process.argsWithAllocator(allocator);
+fn run(arena: Allocator, stdout: anytype) !void {
+    var args = try process.argsWithAllocator(arena);
     defer args.deinit();
 
     // This hash map will serve as a temporary storage for the argumnets.
-    var args_map = std.StringHashMap([]const u8).init(allocator);
+    var args_map = std.StringHashMap([]const u8).init(arena);
     defer args_map.deinit();
     var help_flag = false;
 
@@ -51,12 +53,12 @@ fn run(allocator: Allocator, stdout: anytype) !void {
         return try stdout.print("{s}\n", .{messages.incorr_input_res});
     }
 
-    var options = try socket.ActionOptions.initFromArgs(allocator, args_map);
-    defer options.deinit(allocator);
+    var options = try socket.ActionOptions.initFromArgs(&args_map);
+    defer options.deinit();
     const action = options.parseAction();
 
     switch (action) {
-        .dispatch => try actions.dispatch(allocator, options, stdout),
-        .receive => try actions.receive(allocator, options, stdout),
+        .dispatch => try actions.dispatch(arena, &options, stdout),
+        .receive => try actions.receive(arena, &options, stdout),
     }
 }

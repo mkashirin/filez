@@ -1,13 +1,14 @@
 const std = @import("std");
 const net = std.net;
+
 const Allocator = std.mem.Allocator;
 
 pub const ActionOptions = struct {
     /// This struct stores command line arguments and provides the action
     /// options which should be passed to the `SocketBuffer`, `receive()` and
     /// `dispatch()` functions.
-    pub const Action = enum { dispatch, receive };
     const Self = @This();
+    pub const Action = enum { dispatch, receive };
 
     action: []const u8,
     fdpath: []const u8,
@@ -17,21 +18,13 @@ pub const ActionOptions = struct {
 
     /// Initilizes action options struct using a hash map of CLI arguments.
     pub fn initFromArgs(
-        allocator: Allocator,
-        args_map: std.StringHashMap([]const u8),
+        args_map: *std.StringHashMap([]const u8),
     ) !Self {
-        const U = undefined;
-        var new: Self = .{
-            .action = U,
-            .fdpath = U,
-            .host = U,
-            .port = U,
-            .password = U,
-        };
+        var new: Self = undefined;
         const fields = std.meta.fields(@This());
         inline for (fields) |field| {
             const arg_value = args_map.get(field.name);
-            @field(new, field.name) = try allocator.dupe(u8, arg_value.?);
+            @field(new, field.name) = arg_value.?;
         }
         return new;
     }
@@ -47,11 +40,7 @@ pub const ActionOptions = struct {
     }
 
     /// Frees all the memory been allocated to store the options.
-    pub fn deinit(self: *Self, allocator: Allocator) void {
-        const fields = std.meta.fields(@This());
-        inline for (fields) |field| {
-            allocator.free(@field(self, field.name));
-        }
+    pub fn deinit(self: *Self) void {
         self.* = undefined;
     }
 };
@@ -63,39 +52,39 @@ pub const SocketBuffer = struct {
     /// functionality to a separate socket management structure. Therefore, the
     /// `SocketBuffer`, which serves as an interface for manipulating socket
     /// data, is introduced.
+    const Self = @This();
+
     fdpath: []u8,
     password: []u8,
     contents: []u8,
-    const Self = @This();
 
     /// Initializes a new `SocketBuffer` based on the `ActionConfig` data.
     pub fn initFromOptions(
-        allocator: Allocator,
-        options: ActionOptions,
+        arena: Allocator,
+        options: *ActionOptions,
     ) !Self {
         return .{
-            .fdpath = try allocator.dupe(u8, options.fdpath),
-            .password = try allocator.dupe(u8, options.password),
-            .contents = try readFileContents(allocator, options.fdpath),
+            .fdpath = try arena.dupe(u8, options.fdpath),
+            .password = try arena.dupe(u8, options.password),
+            .contents = try readFileContents(arena, options.fdpath),
         };
     }
 
     /// Initializes a new `SocketBuffer` based on the data coming from the
     /// connection stream.
     pub fn initFromStream(
-        allocator: Allocator,
+        arena: Allocator,
         stream_reader: net.Stream.Reader,
     ) !Self {
         // This loop has to be inline to make use of a comptime known
         // `SocketBuffer` field names.
-        const U = undefined;
-        var new: Self = .{ .fdpath = U, .password = U, .contents = U };
+        var new: Self = undefined;
         const fields = std.meta.fields(@This());
         inline for (fields) |field| {
             // This `list` serves as a buffer, since the object with writer is
             // required to be passed as an argument to the
             // `net.Stream.Reader.streamUntilDelimiter()` function.
-            var list = std.ArrayList(u8).init(allocator);
+            var list = std.ArrayList(u8).init(arena);
             const list_writer = list.writer();
 
             if (!std.mem.eql(u8, field.name, "contents")) {
@@ -111,7 +100,7 @@ pub const SocketBuffer = struct {
             // The data read from the stream must be duped since `list.items`
             // contains a slice. (Slice is essentially a pointer to memory
             // which can be corrupted due to the function return.)
-            @field(new, field.name) = try allocator.dupe(u8, list.items);
+            @field(new, field.name) = try arena.dupe(u8, list.items);
             // Temporary buffer must be deinitialized to be flused and for the
             // resources allocated to be freed.
             list.deinit();
@@ -164,23 +153,19 @@ pub const SocketBuffer = struct {
 
     /// Deinitializes the existing `SocketBuffer` discarding all the memory
     /// that was allocated for it to prevent memory leaks.
-    pub fn deinit(self: *Self, allocator: Allocator) void {
-        const fields = std.meta.fields(@This());
-        inline for (fields) |field| {
-            allocator.free(@field(self, field.name));
-        }
+    pub fn deinit(self: *Self) void {
         self.* = undefined;
     }
 
     /// Utility function to read the contents of the file specified.
     fn readFileContents(
-        allocator: std.mem.Allocator,
+        arena: Allocator,
         file_absolute_path: []const u8,
     ) ![]u8 {
         const file = try std.fs.openFileAbsolute(file_absolute_path, .{});
         defer file.close();
         try file.seekTo(0);
-        const contents = try file.readToEndAlloc(allocator, 8192);
+        const contents = try file.readToEndAlloc(arena, 8192);
         return contents;
     }
 };

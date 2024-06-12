@@ -1,5 +1,6 @@
 const std = @import("std");
 const net = std.net;
+
 const Allocator = std.mem.Allocator;
 
 const socket = @import("socket.zig");
@@ -9,8 +10,8 @@ const ReceiveError = error{PasswordMismatch};
 /// Dispatches the file to the host with port specified in the `ActionConfig`
 /// passed.
 pub fn dispatch(
-    allocator: Allocator,
-    action_options: socket.ActionOptions,
+    arena: Allocator,
+    action_options: *socket.ActionOptions,
     stdout: anytype,
 ) !void {
     // The `std.net.Address` needs to be parsed at first to accept any TCP
@@ -32,10 +33,10 @@ pub fn dispatch(
     const writer = stream.writer();
     // Initialize the `socket.SocketBuffer` based on the `ActionConfig`.
     var socket_buffer = try socket.SocketBuffer.initFromOptions(
-        allocator,
+        arena,
         options_variable,
     );
-    defer socket_buffer.deinit(allocator);
+    defer socket_buffer.deinit();
 
     // Write the data into the socket and store the number of bytes written.
     const bytes_written = try socket_buffer.writeIntoStream(writer);
@@ -48,8 +49,8 @@ pub fn dispatch(
 /// Connects to the dispatching peer and saves the addressed file into the
 /// directory specified in the `buffer.ActionOptions`.
 pub fn receive(
-    allocator: Allocator,
-    action_options: socket.ActionOptions,
+    arena: Allocator,
+    action_options: *socket.ActionOptions,
     stdout: anytype,
 ) !void {
     // The `std.net.Address` needs to be parsed at first to connect to any TCP
@@ -72,10 +73,10 @@ pub fn receive(
     const reader = stream.reader();
     // Buffer automatically fills it's fields based on the incoming data.
     var socket_buffer = try socket.SocketBuffer.initFromStream(
-        allocator,
+        arena,
         reader,
     );
-    defer socket_buffer.deinit(allocator);
+    defer socket_buffer.deinit();
 
     // The following statement insures that passwords for server and client
     // sides are equal.
