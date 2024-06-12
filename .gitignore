@@ -1,4 +1,2 @@
-undodir
-
-zig-cache
+.zig-cache
 zig-out
