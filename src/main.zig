@@ -56,9 +56,9 @@ fn run(arena: Allocator, stdout: anytype) !void {
     var options = try socket.ActionOptions.initFromArgs(&args_map);
     defer options.deinit();
     const action = options.parseAction();
-
-    switch (action) {
-        .dispatch => try actions.dispatch(arena, &options, stdout),
-        .receive => try actions.receive(arena, &options, stdout),
+    if (action == .dispatch) {
+        try actions.dispatch(arena, &options, stdout);
+    } else if (action == .receive) {
+        try actions.receive(arena, &options, stdout);
     }
 }
