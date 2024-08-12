@@ -1,28 +1,33 @@
 const std = @import("std");
-const heap = std.heap;
+
+const log = std.log;
+const mem = std.mem;
 const process = std.process;
 const io = std.io;
 
-const Allocator = std.mem.Allocator;
+const Allocator = mem.Allocator;
 
 const socket = @import("socket.zig");
 const actions = @import("actions.zig");
-const messages = @import("messages.zig");
+const config = @import("config.zig");
+
+pub const std_options: std.Options = .{ .log_level = .info };
 
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(heap.page_allocator);
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     const allocator = arena.allocator();
     defer arena.deinit();
 
-    const stdout = io.getStdOut().writer();
-
-    try run(allocator, stdout);
+    run(allocator) catch |err| log.err(
+        "Could not run the application due to the following error: {any}",
+        .{err},
+    );
 }
 
 /// This function, in fact, runs the application. It processes the command
 /// line arguments into the `socket.ActionOptions` struct which then gets
 /// fed to the `actions.receive()` or `actions.dispatch()`.
-fn run(arena: Allocator, stdout: anytype) !void {
+fn run(arena: Allocator) !void {
     var args = try process.argsWithAllocator(arena);
     defer args.deinit();
 
@@ -33,16 +38,23 @@ fn run(arena: Allocator, stdout: anytype) !void {
 
     var args_count: usize = 1;
     while (args.next()) |arg| : (args_count += 1) {
-        if (std.mem.eql(u8, arg, "help")) {
+        if (mem.eql(u8, arg, "help")) {
             // Display the help message if command is "help".
             help_flag = true;
-            return try stdout.print("{s}\n", .{messages.help_message});
+            return log.info("{s}\n", .{config.help_message});
         } else if (args_count > 1 and args_count <= 6) {
             // Otherwise continue iterating until arguments count does not
             // exceed 6.
-            var arg_iter = std.mem.splitScalar(u8, arg, '=');
+            var arg_iter = mem.splitScalar(u8, arg, '=');
             // Exclude "--" at the start of an argument name.
-            const name = arg_iter.next().?[2..];
+            const name = blk: {
+                const arg_passed = arg_iter.next().?[2..];
+                for (config.args_names) |arg_name| {
+                    if (mem.eql(u8, arg_passed, arg_name)) {
+                        break :blk arg_passed;
+                    }
+                } else return error.InvalidArgument;
+            };
             const value = arg_iter.next().?;
 
             try args_map.put(name, value);
@@ -50,15 +62,21 @@ fn run(arena: Allocator, stdout: anytype) !void {
     }
     // Tell the user if the input is incorrect.
     if ((args_count - 1 != 6 and help_flag != true) or args_count < 2) {
-        return try stdout.print("{s}\n", .{messages.incorr_input_res});
+        return log.info("{s}\n", .{config.incorr_input_res});
     }
 
-    var options = try socket.ActionOptions.initFromArgs(&args_map);
+    var options = socket.ActionOptions.initFromArgs(&args_map);
     defer options.deinit();
     const action = options.parseAction();
     if (action == .dispatch) {
-        try actions.dispatch(arena, &options, stdout);
+        actions.dispatch(arena, &options) catch |err| log.err(
+            "Unexpected error during dispatch: {any}",
+            .{err},
+        );
     } else if (action == .receive) {
-        try actions.receive(arena, &options, stdout);
+        actions.receive(arena, &options) catch |err| log.err(
+            "Unexpected error during receive: {any}",
+            .{err},
+        );
     }
 }

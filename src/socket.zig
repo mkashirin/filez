@@ -1,4 +1,6 @@
 const std = @import("std");
+
+const meta = std.meta;
 const net = std.net;
 
 const Allocator = std.mem.Allocator;
@@ -19,9 +21,9 @@ pub const ActionOptions = struct {
     /// Initilizes action options struct using a hash map of CLI arguments.
     pub fn initFromArgs(
         args_map: *std.StringHashMap([]const u8),
-    ) !Self {
+    ) Self {
         var new: Self = undefined;
-        const fields = std.meta.fields(@This());
+        const fields = meta.fields(@This());
         inline for (fields) |field| {
             const arg_value = args_map.get(field.name);
             @field(new, field.name) = arg_value.?;
@@ -31,7 +33,7 @@ pub const ActionOptions = struct {
 
     /// Returns an enum based on the active action field.
     pub fn parseAction(self: *Self) Action {
-        return std.meta.stringToEnum(Action, self.action).?;
+        return meta.stringToEnum(Action, self.action).?;
     }
 
     /// Returns a `u16` integer to passed as a port to the further functions.
@@ -79,7 +81,7 @@ pub const SocketBuffer = struct {
         // This loop has to be inline to make use of a comptime known
         // `SocketBuffer` field names.
         var new: Self = undefined;
-        const fields = std.meta.fields(@This());
+        const fields = meta.fields(@This());
         inline for (fields) |field| {
             // This `list` serves as a buffer, since the object with writer is
             // required to be passed as an argument to the
@@ -141,7 +143,7 @@ pub const SocketBuffer = struct {
     ) !usize {
         // Store the size of the data being written in bytes.
         var bytes_written: usize = 0;
-        const fields = std.meta.fields(@This());
+        const fields = meta.fields(@This());
         inline for (fields) |field| {
             const value = &@field(self, field.name);
             bytes_written += try stream_writer.write(value.*);

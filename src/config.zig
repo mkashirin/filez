@@ -16,7 +16,7 @@ pub const help_message =
     \\You can only receive or dispatch a file at a time specifying 
     \\`--action="receive"` or `--action="dispatch"` correspondingly. Also if you
     \\are receiving the `fdpath` parameter should lead to the directory where 
-    \\the file should be saved, but if you are dispatching `path` should lead 
+    \\the file should be saved, but if you are dispatching `fdpath` should lead 
     \\to the file to be sent including the extension.
     \\
     \\Commands:
@@ -32,7 +32,6 @@ pub const help_message =
     \\    --password <string>    Password to be matched.
     \\
     \\Note that every argument **must** be connected to it's value by "=".
-    \\
 ;
 
 pub const incorr_input_res =
@@ -40,3 +39,5 @@ pub const incorr_input_res =
     \\check the prompt and try again or use "help" to see the available 
     \\options.
 ;
+
+pub const args_names: [5][]const u8 = .{ "action", "fdpath", "host", "port", "password" };

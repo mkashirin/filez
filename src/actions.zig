@@ -1,19 +1,15 @@
 const std = @import("std");
+
+const log = std.log;
 const net = std.net;
 
 const Allocator = std.mem.Allocator;
 
 const socket = @import("socket.zig");
 
-const ReceiveError = error{PasswordMismatch};
-
 /// Dispatches the file to the host with port specified in the `ActionConfig`
 /// passed.
-pub fn dispatch(
-    arena: Allocator,
-    action_options: *socket.ActionOptions,
-    stdout: anytype,
-) !void {
+pub fn dispatch(arena: Allocator, action_options: *socket.ActionOptions) !void {
     // The `std.net.Address` needs to be parsed at first to accept any TCP
     // converseur. But first `action_options` must become varibale in order to
     // be mutable.
@@ -22,11 +18,11 @@ pub fn dispatch(
         options_variable.host,
         try options_variable.parsePort(),
     );
-    try stdout.print("Filez: Listening on the {}...\n", .{address});
+    log.info("Filez: Listening on the {}...\n", .{address});
     var server = try address.listen(.{ .reuse_port = true });
     // Accept incoming connection and acquire the stream.
     const connection = try server.accept();
-    try stdout.print("Filez: {} connected. Transmitting file...\n", .{address});
+    log.info("Filez: {} connected. Transmitting file...\n", .{address});
     const stream = connection.stream;
     defer stream.close();
 
@@ -40,7 +36,7 @@ pub fn dispatch(
 
     // Write the data into the socket and store the number of bytes written.
     const bytes_written = try socket_buffer.writeIntoStream(writer);
-    try stdout.print(
+    log.info(
         "Filez: File successfully transmitted ({} bytes written).\n",
         .{bytes_written},
     );
@@ -51,7 +47,6 @@ pub fn dispatch(
 pub fn receive(
     arena: Allocator,
     action_options: *socket.ActionOptions,
-    stdout: anytype,
 ) !void {
     // The `std.net.Address` needs to be parsed at first to connect to any TCP
     // converseur. But first `action_options` must become varibale in order to
@@ -64,7 +59,7 @@ pub fn receive(
     // Connect to the dispatcher via TCP.
     const stream = try std.net.tcpConnectToAddress(address);
     defer stream.close();
-    try stdout.print(
+    log.info(
         "Filez: Connected to {}. Receiving file...\n",
         .{address},
     );
@@ -82,7 +77,7 @@ pub fn receive(
     // sides are equal.
     const password_buffer: []const u8 = socket_buffer.password;
     if (!std.mem.eql(u8, options_variable.password, password_buffer))
-        return ReceiveError.PasswordMismatch;
+        return error.PasswordMismatch;
 
     // Finally, the received data gets written into the file placed in the
     // specified directory.
@@ -90,5 +85,5 @@ pub fn receive(
         options_variable.fdpath,
         &socket_buffer.contents,
     );
-    try stdout.print("Filez: file successfully received.", .{});
+    log.info("Filez: file successfully received.", .{});
 }
