@@ -1,27 +1,28 @@
 const std = @import("std");
 
-const log = std.log;
 const mem = std.mem;
 const process = std.process;
-const io = std.io;
 
 const Allocator = mem.Allocator;
 
-const socket = @import("socket.zig");
 const actions = @import("actions.zig");
 const config = @import("config.zig");
-
-pub const std_options: std.Options = .{ .log_level = .info };
+const socket = @import("socket.zig");
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     const allocator = arena.allocator();
     defer arena.deinit();
 
-    run(allocator) catch |err| log.err(
-        "Could not run the application due to the following error: {any}",
-        .{err},
-    );
+    run(allocator) catch |err| {
+        config.log(
+            .err,
+            "Could not run the application due to the following error: {s}",
+            .{@errorName(err)},
+        );
+        std.process.exit(1);
+    };
+    std.process.exit(0);
 }
 
 /// This function, in fact, runs the application. It processes the command
@@ -41,7 +42,8 @@ fn run(arena: Allocator) !void {
         if (mem.eql(u8, arg, "help")) {
             // Display the help message if command is "help".
             help_flag = true;
-            return log.info("{s}\n", .{config.help_message});
+            config.log(.info, "{s}\n", .{config.help_message});
+            return;
         } else if (args_count > 1 and args_count <= 6) {
             // Otherwise continue iterating until arguments count does not
             // exceed 6.
@@ -62,21 +64,16 @@ fn run(arena: Allocator) !void {
     }
     // Tell the user if the input is incorrect.
     if ((args_count - 1 != 6 and help_flag != true) or args_count < 2) {
-        return log.info("{s}\n", .{config.incorr_input_res});
+        config.log(.err, "{s}\n", .{config.incorr_input_res});
+        return error.InvalidInput;
     }
 
     var options = socket.ActionOptions.initFromArgs(&args_map);
     defer options.deinit();
     const action = options.parseAction();
     if (action == .dispatch) {
-        actions.dispatch(arena, &options) catch |err| log.err(
-            "Unexpected error during dispatch: {any}",
-            .{err},
-        );
+        try actions.dispatch(arena, &options);
     } else if (action == .receive) {
-        actions.receive(arena, &options) catch |err| log.err(
-            "Unexpected error during receive: {any}",
-            .{err},
-        );
+        try actions.receive(arena, &options);
     }
 }

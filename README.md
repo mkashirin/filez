@@ -1,7 +1,7 @@
 # Filez
 
 Filez is a very simple tool for receiving and sending files written in the Zig 
-programming language (version is 0.11.0) made to gain better understanding 
+programming language (version is 0.13.0) made to gain better understanding 
 of low level languages and systems programming in general.
 
 ## Building
@@ -17,7 +17,7 @@ git clone https://github.com/mkashirin/filez
 ```
 
 Compile a binary using the Zig compiler (the sole valid version of Zig 
-is 0.12.0) by running the following command:
+is 0.13.0) by running the following command:
 ```bash
 zig build --release="safe"
 ```

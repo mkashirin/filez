@@ -5,11 +5,15 @@ const net = std.net;
 
 const Allocator = std.mem.Allocator;
 
+const config = @import("config.zig");
 const socket = @import("socket.zig");
 
 /// Dispatches the file to the host with port specified in the `ActionConfig`
 /// passed.
-pub fn dispatch(arena: Allocator, action_options: *socket.ActionOptions) !void {
+pub fn dispatch(
+    arena: Allocator,
+    action_options: *socket.ActionOptions,
+) !void {
     // The `std.net.Address` needs to be parsed at first to accept any TCP
     // converseur. But first `action_options` must become varibale in order to
     // be mutable.
@@ -18,11 +22,11 @@ pub fn dispatch(arena: Allocator, action_options: *socket.ActionOptions) !void {
         options_variable.host,
         try options_variable.parsePort(),
     );
-    log.info("Filez: Listening on the {}...\n", .{address});
+    config.log(.info, "Listening on the {}...\n", .{address});
     var server = try address.listen(.{ .reuse_port = true });
     // Accept incoming connection and acquire the stream.
     const connection = try server.accept();
-    log.info("Filez: {} connected. Transmitting file...\n", .{address});
+    config.log(.info, "{} connected. Transmitting file...\n", .{address});
     const stream = connection.stream;
     defer stream.close();
 
@@ -36,8 +40,10 @@ pub fn dispatch(arena: Allocator, action_options: *socket.ActionOptions) !void {
 
     // Write the data into the socket and store the number of bytes written.
     const bytes_written = try socket_buffer.writeIntoStream(writer);
-    log.info(
-        "Filez: File successfully transmitted ({} bytes written).\n",
+
+    config.log(
+        .info,
+        "File successfully transmitted ({} bytes written).\n",
         .{bytes_written},
     );
 }
@@ -59,10 +65,7 @@ pub fn receive(
     // Connect to the dispatcher via TCP.
     const stream = try std.net.tcpConnectToAddress(address);
     defer stream.close();
-    log.info(
-        "Filez: Connected to {}. Receiving file...\n",
-        .{address},
-    );
+    config.log(.info, "Connected to {}. Receiving file...\n", .{address});
 
     // Reader of the stream allows to read from a socket.
     const reader = stream.reader();
@@ -85,5 +88,5 @@ pub fn receive(
         options_variable.fdpath,
         &socket_buffer.contents,
     );
-    log.info("Filez: file successfully received.", .{});
+    config.log(.info, "file successfully received.", .{});
 }

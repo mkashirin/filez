@@ -134,6 +134,7 @@ pub const SocketBuffer = struct {
         // Write into file.
         try file.seekTo(0);
         try file.writeAll(contents.*);
+        try file.seekTo(0);
     }
 
     /// Writes the data stored in `self` into the connection stream.

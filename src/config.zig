@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub const help_message =
     \\Filez is a minimalistic LAN file buffer. It allows you transceive your 
     \\files over TCP until your machines have access to each other's ports.
@@ -40,4 +42,28 @@ pub const incorr_input_res =
     \\options.
 ;
 
-pub const args_names: [5][]const u8 = .{ "action", "fdpath", "host", "port", "password" };
+pub const args_names: [5][]const u8 = .{
+    "action",
+    "fdpath",
+    "host",
+    "port",
+    "password",
+};
+
+pub const Prefix = enum { info, err };
+
+pub fn log(
+    comptime prefix: Prefix,
+    comptime format: []const u8,
+    args: anytype,
+) void {
+    std.debug.lockStdErr();
+    defer std.debug.unlockStdErr();
+    const stderr = std.io.getStdErr().writer();
+
+    const app_name = "Filez";
+    nosuspend stderr.print(
+        app_name ++ " (" ++ @tagName(prefix) ++ "): " ++ format,
+        args,
+    ) catch return;
+}
