@@ -64,7 +64,7 @@ fn run(arena: Allocator) !void {
     }
     // Tell the user if the input is incorrect.
     if ((args_count - 1 != 6 and help_flag != true) or args_count < 2) {
-        config.log(.err, "{s}\n", .{config.incorr_input_res});
+        config.log(.info, "{s}\n", .{config.incorr_input_res});
         return error.InvalidInput;
     }
 
