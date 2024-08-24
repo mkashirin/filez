@@ -22,7 +22,6 @@ pub fn main() !void {
         );
         std.process.exit(1);
     };
-    std.process.exit(0);
 }
 
 /// This function, in fact, runs the application. It processes the command
