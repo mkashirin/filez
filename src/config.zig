@@ -1,5 +1,7 @@
 const std = @import("std");
 
+pub const err_scode: u8 = 1;
+
 pub const help_message =
     \\Filez is a minimalistic LAN file buffer. It allows you transceive your 
     \\files over TCP until your machines have access to each other's ports.

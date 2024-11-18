@@ -20,7 +20,7 @@ pub fn main() !void {
             "Could not run the application due to the following error: {s}",
             .{@errorName(err)},
         );
-        std.process.exit(1);
+        std.process.exit(config.err_scode);
     };
 }
 

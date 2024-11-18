@@ -1,8 +1,10 @@
-# Filez
+<h1 align="center">Filez</h1>
 
+<p align="center">
 Filez is a very simple tool for receiving and sending files written in the Zig 
 programming language (version is 0.13.0) made to gain better understanding 
 of low level languages and systems programming in general.
+</p>
 
 ## Building
 
