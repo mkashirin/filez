@@ -1,4 +1,5 @@
 const std = @import("std");
+const testing = std.testing;
 
 const mem = std.mem;
 const process = std.process;
@@ -14,7 +15,14 @@ pub fn main() !void {
     const allocator = arena.allocator();
     defer arena.deinit();
 
-    run(allocator) catch |err| {
+    var args = try process.argsWithAllocator(allocator);
+    defer args.deinit();
+    var args_map = try parse_args(allocator, args);
+
+    var options = socket.ActionOptions.initFromArgs(&args_map);
+    defer options.deinit();
+
+    run(allocator, options) catch |err| {
         config.log(
             .err,
             "Could not run the application due to the following error: {s}\n",
@@ -27,22 +35,33 @@ pub fn main() !void {
 /// This function, in fact, runs the application. It processes the command
 /// line arguments into the `socket.ActionOptions` struct which then gets
 /// fed to the `actions.receive()` or `actions.dispatch()`.
-fn run(arena: Allocator) !void {
-    var args = try process.argsWithAllocator(arena);
-    defer args.deinit();
+fn run(arena: Allocator, options: socket.ActionOptions) !void {
+    var voptions = options;
+    const action = voptions.parseAction();
+    if (action == .dispatch) {
+        try actions.dispatch(arena, &voptions);
+    } else if (action == .receive) {
+        try actions.receive(arena, &voptions);
+    }
+}
 
+fn parse_args(
+    arena: Allocator,
+    args: std.process.ArgIterator,
+) !std.StringHashMap([]const u8) {
+    var args_ = args;
     // This hash map will serve as a temporary storage for the argumnets.
     var args_map = std.StringHashMap([]const u8).init(arena);
     defer args_map.deinit();
     var help_flag = false;
 
     var args_count: usize = 1;
-    while (args.next()) |arg| : (args_count += 1) {
+    while (args_.next()) |arg| : (args_count += 1) {
         if (mem.eql(u8, arg, "help")) {
             // Display the help message if command is "help".
             help_flag = true;
             config.log(.info, "{s}\n", .{config.help_message});
-            return;
+            return error.HelpFound;
         } else if (args_count > 1 and args_count <= 6) {
             // Otherwise continue iterating until arguments count does not
             // exceed 6.
@@ -66,13 +85,70 @@ fn run(arena: Allocator) !void {
         config.log(.info, "{s}\n", .{config.incorr_input_res});
         return error.InvalidInput;
     }
+    return args_map;
+}
 
-    var options = socket.ActionOptions.initFromArgs(&args_map);
-    defer options.deinit();
-    const action = options.parseAction();
-    if (action == .dispatch) {
-        try actions.dispatch(arena, &options);
-    } else if (action == .receive) {
-        try actions.receive(arena, &options);
+test "End to end test" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    const allocator = arena.allocator();
+    defer arena.deinit();
+
+    var cwd = try std.fs.cwd().openDir(".", .{});
+    defer cwd.close();
+    try cwd.makeDir("test");
+
+    var dispatch_file = try cwd.createFile("test/testing.txt", .{});
+    try dispatch_file.writeAll("Hello from dispatcher!!!\r\n");
+    dispatch_file.close();
+    try cwd.makeDir("test/inbox");
+
+    var _dispatch_out_buffer: []u8 = try allocator.alloc(u8, 256);
+    const dispatch_fdpath = try cwd.realpath(
+        "test/testing.txt",
+        _dispatch_out_buffer[0..],
+    );
+
+    var _receive_out_buffer: []u8 = try allocator.alloc(u8, 256);
+    const receive_fdpath = try cwd.realpath("test/inbox", _receive_out_buffer[0..]);
+
+    var dispatch_options = socket.ActionOptions{
+        .action = "dispatch",
+        .fdpath = dispatch_fdpath,
+        .host = "127.0.0.1",
+        .port = "8080",
+        .password = "pass1234",
+    };
+    defer dispatch_options.deinit();
+    // Create a thread for the dispatch task.
+    const dispatch_thread = try std.Thread.spawn(
+        .{ .allocator = allocator },
+        run,
+        .{ allocator, dispatch_options },
+    );
+
+    var receive_options = socket.ActionOptions{
+        .action = "receive",
+        .fdpath = receive_fdpath,
+        .host = "127.0.0.1",
+        .port = "8080",
+        .password = "pass1234",
+    };
+    defer receive_options.deinit();
+    // Create a thread for the receive task.
+    const receive_thread = try std.Thread.spawn(
+        .{ .allocator = allocator },
+        run,
+        .{ allocator, receive_options },
+    );
+
+    // Join both threads.
+    inline for (.{ dispatch_thread, receive_thread }) |thread| {
+        thread.join();
     }
+
+    var received_file = try cwd.openFile("test/inbox/testing.txt", .{});
+    try cwd.deleteTree("test");
+    var buffer: []u8 = try allocator.alloc(u8, 24);
+    _ = try received_file.readAll(buffer);
+    try testing.expectEqualSlices(u8, "Hello from dispatcher!!!"[0..], buffer[0..]);
 }

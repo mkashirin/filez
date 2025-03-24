@@ -3,8 +3,9 @@ const std = @import("std");
 pub const err_scode: u8 = 1;
 
 pub const help_message =
-    \\Filez is a minimalistic LAN file buffer. It allows you transceive your 
-    \\files over TCP until your machines have access to each other's ports.
+    \\Filez is a minimalistic LAN file buffer. It allows you
+    \\transceive your files over TCP until your machines have access to each
+    \\other's ports.
     \\
     \\Usage: filez [arguments]
     \\
@@ -39,9 +40,9 @@ pub const help_message =
 ;
 
 pub const incorr_input_res =
-    \\The input you have provided is incorrect and can not be parsed. Please
-    \\check the prompt and try again or use "help" to see the available 
-    \\options.
+    \\The input you have provided is incorrect and can not be
+    \\parsed. Please check the prompt and try again or use "help" to see the
+    \\available options.
 ;
 
 pub const args_names: [5][]const u8 = .{

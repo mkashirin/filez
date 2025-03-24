@@ -1,10 +1,12 @@
 const std = @import("std");
+const builtin = std.builtin;
 const Build = std.Build;
-const ResolvedTarget = Build.ResolvedTarget;
-const OptimizeMode = std.builtin.OptimizeMode;
 
 pub fn build(b: *Build) void {
-    const linux = b.resolveTargetQuery(.{ .cpu_arch = .x86_64, .os_tag = .linux });
+    const linux = b.resolveTargetQuery(.{
+        .cpu_arch = .x86_64,
+        .os_tag = .linux,
+    });
     const windows = b.resolveTargetQuery(.{
         .cpu_arch = .x86_64,
         .os_tag = .windows,
@@ -30,7 +32,7 @@ pub fn build(b: *Build) void {
 
 const BuildOptions = struct {
     target: Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
+    optimize: builtin.OptimizeMode,
     run_step: []const u8,
     test_step: []const u8,
 };
