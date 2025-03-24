@@ -17,7 +17,7 @@ pub fn main() !void {
     run(allocator) catch |err| {
         config.log(
             .err,
-            "Could not run the application due to the following error: {s}",
+            "Could not run the application due to the following error: {s}\n",
             .{@errorName(err)},
         );
         std.process.exit(config.err_scode);
