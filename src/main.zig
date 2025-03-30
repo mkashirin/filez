@@ -88,7 +88,7 @@ fn parse_args(
     return args_map;
 }
 
-test "End to end test" {
+test "end-to-end" {
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     const allocator = arena.allocator();
     defer arena.deinit();
@@ -97,19 +97,20 @@ test "End to end test" {
     defer cwd.close();
     try cwd.makeDir("test");
 
-    var dispatch_file = try cwd.createFile("test/testing.txt", .{});
+    try cwd.makeDir("test/dispatcher");
+    var dispatch_file = try cwd.createFile("test/message.txt", .{});
     try dispatch_file.writeAll("Hello from dispatcher!!!\r\n");
     dispatch_file.close();
-    try cwd.makeDir("test/inbox");
+    try cwd.makeDir("test/receiver");
 
     var _dispatch_out_buffer: []u8 = try allocator.alloc(u8, 256);
     const dispatch_fdpath = try cwd.realpath(
-        "test/testing.txt",
+        "test/message.txt",
         _dispatch_out_buffer[0..],
     );
 
     var _receive_out_buffer: []u8 = try allocator.alloc(u8, 256);
-    const receive_fdpath = try cwd.realpath("test/inbox", _receive_out_buffer[0..]);
+    const receive_fdpath = try cwd.realpath("test/receiver", _receive_out_buffer[0..]);
 
     var dispatch_options = socket.ActionOptions{
         .action = "dispatch",
@@ -146,7 +147,7 @@ test "End to end test" {
         thread.join();
     }
 
-    var received_file = try cwd.openFile("test/inbox/testing.txt", .{});
+    var received_file = try cwd.openFile("test/receiver/message.txt", .{});
     try cwd.deleteTree("test");
     var buffer: []u8 = try allocator.alloc(u8, 24);
     _ = try received_file.readAll(buffer);
