@@ -1,16 +1,12 @@
 <h1 align="center">Filez</h1>
 
 <p align="center">
-Filez is a very simple tool for receiving and sending files written in the Zig 
-programming language (version is 0.13.0) made to gain better understanding 
-of low level languages and systems programming in general.
+Filez is a very simple file buffer files written in the Zig programming
+language (version is 0.13.0). Is was built to gain better understanding of low
+level languages and systems programming in general.
 </p>
 
 ## Building
-
-At the moment, there is no direct method to download a binary for your system. 
-Therefore, if you wish to utilize this application, you will need to compile it 
-from source. Here are the steps to do so.
 
 Clone this repository onto your local machine using the Git Command Line 
 Interface (CLI):
@@ -24,8 +20,8 @@ is 0.13.0) by running the following command:
 zig build --release="safe"
 ```
 
-After completing the above steps, the binary will be located in the 
-"zig-out/bin/" directory. That concludes the process. Consider different 
+After completing the steps above, the binary will be located in the 
+zig-out/bin. That concludes the process. Consider different 
 `zig build` modes for embedded systems.
 
 ## Usage
