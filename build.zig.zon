@@ -1,5 +1,13 @@
 .{
-    .name = "filez",
-    .version = "1.0.0",
-    .paths = .{""},
+    .name = .filez,
+    .version = "1.1.0",
+    .fingerprint = 0x7fe9f8fd448f2d83,
+    .minimum_zig_version = "0.14.1-dev.80+60922dbf3",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "LICENSE",
+        "README.md",
+    },
 }

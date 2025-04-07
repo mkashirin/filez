@@ -8,7 +8,7 @@ const Allocator = mem.Allocator;
 
 const actions = @import("actions.zig");
 const config = @import("config.zig");
-const socket = @import("socket.zig");
+const NetBuffer = @import("NetBuffer.zig");
 
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -19,7 +19,7 @@ pub fn main() !void {
     defer args.deinit();
     var args_map = try parse_args(allocator, args);
 
-    var options = socket.ActionOptions.initFromArgs(&args_map);
+    var options = actions.ActionOptions.initFromArgs(&args_map);
     defer options.deinit();
 
     run(allocator, options) catch |err| {
@@ -35,7 +35,7 @@ pub fn main() !void {
 /// This function, in fact, runs the application. It processes the command
 /// line arguments into the `socket.ActionOptions` struct which then gets
 /// fed to the `actions.receive()` or `actions.dispatch()`.
-fn run(arena: Allocator, options: socket.ActionOptions) !void {
+fn run(arena: Allocator, options: actions.ActionOptions) !void {
     var voptions = options;
     const action = voptions.parseAction();
     if (action == .dispatch) {
@@ -81,7 +81,7 @@ fn parse_args(
         }
     }
     // Tell the user if the input is incorrect.
-    if ((args_count - 1 != 6 and help_flag != true) or args_count < 2) {
+    if ((args_count - 1 != 5 and help_flag != true) or args_count < 2) {
         config.log(.info, "{s}\n", .{config.incorr_input_res});
         return error.InvalidInput;
     }
@@ -104,20 +104,19 @@ test "end-to-end" {
     try cwd.makeDir("test/receiver");
 
     var _dispatch_out_buffer: []u8 = try allocator.alloc(u8, 256);
-    const dispatch_fdpath = try cwd.realpath(
+    const dfp = try cwd.realpath(
         "test/message.txt",
         _dispatch_out_buffer[0..],
     );
 
     var _receive_out_buffer: []u8 = try allocator.alloc(u8, 256);
-    const receive_fdpath = try cwd.realpath("test/receiver", _receive_out_buffer[0..]);
+    const rfp = try cwd.realpath("test/receiver", _receive_out_buffer[0..]);
 
-    var dispatch_options = socket.ActionOptions{
+    var dispatch_options = actions.ActionOptions{
         .action = "dispatch",
-        .fdpath = dispatch_fdpath,
+        .file_path = dfp,
         .host = "127.0.0.1",
         .port = "8080",
-        .password = "pass1234",
     };
     defer dispatch_options.deinit();
     // Create a thread for the dispatch task.
@@ -127,12 +126,11 @@ test "end-to-end" {
         .{ allocator, dispatch_options },
     );
 
-    var receive_options = socket.ActionOptions{
+    var receive_options = actions.ActionOptions{
         .action = "receive",
-        .fdpath = receive_fdpath,
+        .file_path = rfp,
         .host = "127.0.0.1",
         .port = "8080",
-        .password = "pass1234",
     };
     defer receive_options.deinit();
     // Create a thread for the receive task.
