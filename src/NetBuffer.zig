@@ -18,7 +18,7 @@ const Self = @This();
 filepath: []u8,
 contents: []u8,
 
-/// Initializes a new `NewBuffer` based on the `ActionOptions` data.
+/// Initializes a new `NetBuffer` based on the `ActionOptions` data.
 pub fn initFromOptions(
     arena: Allocator,
     options: *actions.ActionOptions,
@@ -29,7 +29,7 @@ pub fn initFromOptions(
     };
 }
 
-/// Initializes a new `SocketBuffer` based on the data coming from the
+/// Initializes a new `NetBuffer` based on the data coming from the
 /// connection stream.
 pub fn initFromStream(
     arena: Allocator,
@@ -102,7 +102,6 @@ pub fn writeIntoStream(
     self: *Self,
     stream_writer: net.Stream.Writer,
 ) !usize {
-    // Store the size of the data being written in bytes.
     var bytes_written: usize = 0;
     const fields = meta.fields(@This());
     inline for (fields) |field| {

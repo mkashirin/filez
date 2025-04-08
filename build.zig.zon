@@ -1,6 +1,6 @@
 .{
     .name = .netfilez,
-    .version = "1.1.0",
+    .version = "1.0.0",
     .fingerprint = 0x50b54e95083c833a,
     .minimum_zig_version = "0.14.1-dev.80+60922dbf3",
     .paths = .{

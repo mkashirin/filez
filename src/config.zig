@@ -33,8 +33,6 @@ pub const help_message =
     \\    --filepath <string>      Absolute path to the file or directory.
     \\    --host <string>        Host to be listened on/connected to.
     \\    --port <u16>           Port to be listened on/connected to.
-    \\
-    \\Note that every argument **must** be connected to it's value by "=".
 ;
 
 pub const incorr_input_res =

@@ -49,14 +49,14 @@ fn parse_args(
     arena: Allocator,
     args: std.process.ArgIterator,
 ) !std.StringHashMap([]const u8) {
-    var args_ = args;
+    var vargs = args;
     // This hash map will serve as a temporary storage for the argumnets.
     var args_map = std.StringHashMap([]const u8).init(arena);
     defer args_map.deinit();
     var help_flag = false;
 
     var args_count: usize = 1;
-    while (args_.next()) |arg| : (args_count += 1) {
+    while (vargs.next()) |arg| : (args_count += 1) {
         if (mem.eql(u8, arg, "help")) {
             // Display the help message if command is "help".
             help_flag = true;
@@ -65,7 +65,7 @@ fn parse_args(
         } else if (args_count > 1 and args_count <= 6) {
             // Otherwise continue iterating until arguments count does not
             // exceed 6.
-            var arg_iter = mem.splitScalar(u8, arg, '=');
+            var arg_iter = mem.splitAny(u8, arg, " =");
             // Exclude "--" at the start of an argument name.
             const name = blk: {
                 const arg_passed = arg_iter.next().?[2..];
