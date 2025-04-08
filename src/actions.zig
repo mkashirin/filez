@@ -124,5 +124,5 @@ pub fn receive(
         voptions.filepath,
         &net_buffer.contents,
     );
-    config.log(.info, "file successfully received.", .{});
+    config.log(.info, "File successfully received.", .{});
 }
