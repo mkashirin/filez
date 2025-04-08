@@ -12,6 +12,7 @@ pub fn build(b: *Build) void {
         .os_tag = .windows,
     });
     const optimize = b.standardOptimizeOption(.{});
+
     const linux_options: BuildOptions = .{
         .target = linux,
         .optimize = optimize,
@@ -39,7 +40,7 @@ const BuildOptions = struct {
 
 fn build_target(b: *Build, options: BuildOptions) void {
     const exe = b.addExecutable(.{
-        .name = "filez",
+        .name = "netfilez",
         .root_source_file = b.path("src/main.zig"),
         .target = options.target,
         .optimize = options.optimize,
