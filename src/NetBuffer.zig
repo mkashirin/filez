@@ -15,7 +15,7 @@ const actions = @import("actions.zig");
 /// data, is introduced.
 const Self = @This();
 
-file_path: []u8,
+filepath: []u8,
 contents: []u8,
 
 /// Initializes a new `NewBuffer` based on the `ActionOptions` data.
@@ -24,8 +24,8 @@ pub fn initFromOptions(
     options: *actions.ActionOptions,
 ) !Self {
     return .{
-        .file_path = try arena.dupe(u8, options.file_path),
-        .contents = try readFileContents(arena, options.file_path),
+        .filepath = try arena.dupe(u8, options.filepath),
+        .contents = try readFileContents(arena, options.filepath),
     };
 }
 
@@ -84,7 +84,7 @@ pub fn writeContentsIntoFile(
 
     var file_path_iterator = std.mem.splitBackwardsScalar(
         u8,
-        @as([]const u8, self.file_path),
+        @as([]const u8, self.filepath),
         '/',
     );
     // Acquire the name of the file received.

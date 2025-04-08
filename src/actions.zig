@@ -17,7 +17,7 @@ pub const ActionOptions = struct {
     pub const Action = enum { dispatch, receive };
 
     action: []const u8,
-    file_path: []const u8,
+    filepath: []const u8,
     host: []const u8,
     port: []const u8,
 
@@ -121,7 +121,7 @@ pub fn receive(
     // Finally, the received data gets written into the file placed in the
     // specified directory.
     try net_buffer.writeContentsIntoFile(
-        voptions.file_path,
+        voptions.filepath,
         &net_buffer.contents,
     );
     config.log(.info, "file successfully received.", .{});

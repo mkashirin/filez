@@ -114,7 +114,7 @@ test "end-to-end" {
 
     var dispatch_options = actions.ActionOptions{
         .action = "dispatch",
-        .file_path = dfp,
+        .filepath = dfp,
         .host = "127.0.0.1",
         .port = "8080",
     };
@@ -128,7 +128,7 @@ test "end-to-end" {
 
     var receive_options = actions.ActionOptions{
         .action = "receive",
-        .file_path = rfp,
+        .filepath = rfp,
         .host = "127.0.0.1",
         .port = "8080",
     };

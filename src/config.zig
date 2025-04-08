@@ -13,7 +13,7 @@ pub const help_message =
     \\
     \\    netfilez \
     \\        --action="receive" \
-    \\        --fdpath="/absolute/path/to/directory/" \
+    \\        --filepath="/absolute/path/to/directory/" \
     \\        --host="127.0.0.1" \
     \\        --port="8080" \
     \\
@@ -30,7 +30,7 @@ pub const help_message =
     \\Arguments:
     \\
     \\    --action <action>      Receive or dispatch file.
-    \\    --fdpath <string>      Absolute path to the file or directory.
+    \\    --filepath <string>      Absolute path to the file or directory.
     \\    --host <string>        Host to be listened on/connected to.
     \\    --port <u16>           Port to be listened on/connected to.
     \\
@@ -43,9 +43,9 @@ pub const incorr_input_res =
     \\available options.
 ;
 
-pub const args_names: [5][]const u8 = .{
+pub const args_names: [4][]const u8 = .{
     "action",
-    "file_path",
+    "filepath",
     "host",
     "port",
 };
