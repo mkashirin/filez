@@ -16,13 +16,11 @@ pub fn main() !void {
     defer arena.deinit();
 
     var args = try process.argsWithAllocator(allocator);
-    defer args.deinit();
-    var args_map = try parse_args(allocator, args);
+    var args_map = try parse_args(allocator, &args);
 
     var options = actions.ActionOptions.initFromArgs(&args_map);
-    defer options.deinit();
 
-    run(allocator, options) catch |err| {
+    run(allocator, &options) catch |err| {
         config.log(
             .err,
             "Could not run the application due to the following error: {s}\n",
@@ -35,8 +33,8 @@ pub fn main() !void {
 /// This function, in fact, runs the application. It processes the command
 /// line arguments into the `socket.ActionOptions` struct which then gets
 /// fed to the `actions.receive()` or `actions.dispatch()`.
-fn run(arena: Allocator, options: actions.ActionOptions) !void {
-    var voptions = options;
+fn run(arena: Allocator, options: *actions.ActionOptions) !void {
+    var voptions = options.*;
     const action = voptions.parseAction();
     if (action == .dispatch) {
         try actions.dispatch(arena, &voptions);
@@ -47,12 +45,11 @@ fn run(arena: Allocator, options: actions.ActionOptions) !void {
 
 fn parse_args(
     arena: Allocator,
-    args: std.process.ArgIterator,
+    args: *std.process.ArgIterator,
 ) !std.StringHashMap([]const u8) {
-    var vargs = args;
+    var vargs = args.*;
     // This hash map will serve as a temporary storage for the argumnets.
     var args_map = std.StringHashMap([]const u8).init(arena);
-    defer args_map.deinit();
     var help_flag = false;
 
     var args_count: usize = 1;
@@ -94,7 +91,6 @@ test "end-to-end" {
     defer arena.deinit();
 
     var cwd = try std.fs.cwd().openDir(".", .{});
-    defer cwd.close();
     try cwd.makeDir("test");
 
     try cwd.makeDir("test/dispatcher");
@@ -118,12 +114,11 @@ test "end-to-end" {
         .host = "127.0.0.1",
         .port = "8080",
     };
-    defer dispatch_options.deinit();
     // Create a thread for the dispatch task.
     const dispatch_thread = try std.Thread.spawn(
         .{ .allocator = allocator },
         run,
-        .{ allocator, dispatch_options },
+        .{ allocator, &dispatch_options },
     );
 
     var receive_options = actions.ActionOptions{
@@ -132,12 +127,11 @@ test "end-to-end" {
         .host = "127.0.0.1",
         .port = "8080",
     };
-    defer receive_options.deinit();
     // Create a thread for the receive task.
     const receive_thread = try std.Thread.spawn(
         .{ .allocator = allocator },
         run,
-        .{ allocator, receive_options },
+        .{ allocator, &receive_options },
     );
 
     // Join both threads.

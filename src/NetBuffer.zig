@@ -80,7 +80,6 @@ pub fn writeContentsIntoFile(
         dir_absolute_path,
         .{ .no_follow = true },
     );
-    defer dir.close();
 
     var file_path_iterator = std.mem.splitBackwardsScalar(
         u8,
@@ -90,7 +89,6 @@ pub fn writeContentsIntoFile(
     // Acquire the name of the file received.
     const file_name = file_path_iterator.first();
     var file = try dir.createFile(file_name, .{ .read = true });
-    defer file.close();
     // Write into file.
     try file.seekTo(0);
     try file.writeAll(contents.*);
@@ -125,7 +123,6 @@ fn readFileContents(
     file_absolute_path: []const u8,
 ) ![]u8 {
     const file = try std.fs.openFileAbsolute(file_absolute_path, .{});
-    defer file.close();
     try file.seekTo(0);
     const contents = try file.readToEndAlloc(arena, 8192);
     return contents;

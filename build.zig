@@ -11,6 +11,10 @@ pub fn build(b: *Build) void {
         .cpu_arch = .x86_64,
         .os_tag = .windows,
     });
+    const macos = b.resolveTargetQuery(.{
+        .cpu_arch = .aarch64,
+        .os_tag = .macos,
+    });
     const optimize = b.standardOptimizeOption(.{});
 
     const linux_options: BuildOptions = .{
@@ -25,8 +29,14 @@ pub fn build(b: *Build) void {
         .run_step = "run-windows",
         .test_step = "test-windows",
     };
+    const macos_options: BuildOptions = .{
+        .target = macos,
+        .optimize = optimize,
+        .run_step = "run-macos",
+        .test_step = "test-macos",
+    };
 
-    inline for (.{ linux_options, windows_options }) |options| {
+    inline for (.{ linux_options, windows_options, macos_options }) |options| {
         build_target(b, options);
     }
 }

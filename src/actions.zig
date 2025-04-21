@@ -70,7 +70,6 @@ pub fn dispatch(
     const connection = try server.accept();
     config.log(.info, "{} connected. Transmitting file...\n", .{address});
     const stream = connection.stream;
-    defer stream.close();
 
     const writer = stream.writer();
     // Initialize the `socket.SocketBuffer` based on the `ActionConfig`.
@@ -78,7 +77,6 @@ pub fn dispatch(
         arena,
         options_variable,
     );
-    defer net_buffer.deinit();
 
     // Write the data into the socket and store the number of bytes written.
     const bytes_written = try net_buffer.writeIntoStream(writer);
@@ -106,7 +104,6 @@ pub fn receive(
     );
     // Connect to the dispatcher via TCP.
     const stream = try std.net.tcpConnectToAddress(address);
-    defer stream.close();
     config.log(.info, "Connected to {}. Receiving file...\n", .{address});
 
     // Reader of the stream allows to read from a socket.
@@ -116,7 +113,6 @@ pub fn receive(
         arena,
         reader,
     );
-    defer net_buffer.deinit();
 
     // Finally, the received data gets written into the file placed in the
     // specified directory.
